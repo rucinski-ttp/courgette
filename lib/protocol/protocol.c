@@ -146,7 +146,7 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
             break;
         case 2:
         { /* payload */
-            static uint8_t pbuf[256];
+            static uint8_t pbuf[1024];
             if (s->payload_pos < sizeof(pbuf))
             {
                 pbuf[s->payload_pos] = b;

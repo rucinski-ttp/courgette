@@ -7,6 +7,7 @@
 #include "cmd/dispatch.h"
 #include "cmd/echo.h"
 #include "cmd/mem.h"
+#include "app/sd_ops.h"
 #include "cmd/reboot.h"
 #include "cmd/version.h"
 #include "protocol/protocol.h"
@@ -29,6 +30,8 @@ void main(void)
     (void)cmd_version_init();
     (void)cmd_reboot_init();
     (void)cmd_mem_init();
+    extern int cmd_sd_init(void);
+    (void)cmd_sd_init();
 
     /* Start protocol processing after handlers are registered */
     proto_task_start();
@@ -41,6 +44,9 @@ void main(void)
 
     /* Activity LED (blink on mem read/write) */
     (void)activity_led_init();
+
+    /* SD ops worker */
+    (void)sd_ops_init();
 
     /* Send boot log over protocol */
     {

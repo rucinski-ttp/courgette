@@ -18,6 +18,9 @@ static void on_msg(const proto_msg_t* msg, void* user)
         activity_led_pulse();
     }
 
+    if (rc != 0) {
+        rsp_len = 0;
+    }
     uint8_t frame[320];
     proto_msg_t out = {0};
     out.cmd = msg->cmd;
@@ -25,7 +28,7 @@ static void on_msg(const proto_msg_t* msg, void* user)
     out.payload = (rsp_len ? rsp : NULL);
     out.length = (rsp_len ? rsp_len : 0);
     size_t frame_len = 0;
-    if (rc == 0 && proto_encode(&out, frame, sizeof(frame), &frame_len) == PROTO_OK)
+    if (proto_encode(&out, frame, sizeof(frame), &frame_len) == PROTO_OK)
     {
         (void)platform_serial_write(frame, frame_len);
     }
