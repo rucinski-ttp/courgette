@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Build artifacts
+build/
+build-*/
+compile_commands.json
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Misc
+*.swp
+*.swo
+*.log
+
