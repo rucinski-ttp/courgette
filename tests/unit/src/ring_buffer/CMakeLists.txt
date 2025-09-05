@@ -1,0 +1,5 @@
+add_executable(test_ring_buffer_basic test_ring_buffer_basic.cpp)
+target_link_libraries(test_ring_buffer_basic PRIVATE util GTest::gtest_main)
+include(GoogleTest)
+gtest_discover_tests(test_ring_buffer_basic)
+

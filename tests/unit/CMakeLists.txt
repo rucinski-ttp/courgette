@@ -20,14 +20,36 @@ endfunction()
 set(ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../..")
 
 # Portable library targets (mirror app linkage)
-add_library(util STATIC ${ROOT_DIR}/lib/util/ring_buffer.c)
+add_library(util STATIC ${ROOT_DIR}/lib/util/ring_buffer.c ${ROOT_DIR}/lib/util/crc32.c)
 target_include_directories(util PUBLIC ${ROOT_DIR}/lib/util/include)
 host_strict_warnings(util)
 
-# Also compile protocol library to produce compile_commands for clang-tidy
 add_library(protocol STATIC ${ROOT_DIR}/lib/protocol/protocol.c)
-target_include_directories(protocol PUBLIC ${ROOT_DIR}/lib/protocol/include)
+target_include_directories(protocol PUBLIC ${ROOT_DIR}/lib/protocol/include ${ROOT_DIR}/lib/util/include)
 host_strict_warnings(protocol)
+
+add_library(cmd_dispatch STATIC ${ROOT_DIR}/lib/cmd/dispatch.c)
+target_include_directories(cmd_dispatch PUBLIC ${ROOT_DIR}/lib/cmd/include)
+host_strict_warnings(cmd_dispatch)
+
+add_library(cmd_echo STATIC ${ROOT_DIR}/lib/cmd/echo.c)
+target_include_directories(cmd_echo PUBLIC ${ROOT_DIR}/lib/cmd/include)
+host_strict_warnings(cmd_echo)
+
+add_library(cmd_version STATIC ${ROOT_DIR}/lib/cmd/version.c)
+target_include_directories(cmd_version PUBLIC ${ROOT_DIR}/lib/cmd/include ${ROOT_DIR}/app)
+host_strict_warnings(cmd_version)
+
+# Inject git hash into cmd_version for host builds as well
+execute_process(
+  COMMAND git rev-parse --short=12 HEAD
+  WORKING_DIRECTORY ${ROOT_DIR}
+  OUTPUT_VARIABLE GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT GIT_HASH)
+  set(GIT_HASH "unknown")
+endif()
+target_compile_definitions(cmd_version PRIVATE APP_GIT_HASH="${GIT_HASH}")
 
 # GoogleTest
 FetchContent_Declare(
@@ -39,10 +61,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(test_ring_buffer
-  ${CMAKE_CURRENT_LIST_DIR}/src/test_ring_buffer.cpp)
-target_link_libraries(test_ring_buffer PRIVATE util GTest::gtest_main)
-host_strict_warnings(test_ring_buffer)
-
-include(GoogleTest)
-gtest_discover_tests(test_ring_buffer)
+# Each unit test lives in its own subfolder target
+add_subdirectory(src/ring_buffer)
+add_subdirectory(src/protocol)
+add_subdirectory(src/cmd)
