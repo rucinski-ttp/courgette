@@ -1,12 +1,12 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-int cmd_mem_init(void);
+    int cmd_mem_init(void);
 
 #ifdef __cplusplus
 }
 #endif
-

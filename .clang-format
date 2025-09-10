@@ -6,4 +6,6 @@ AllowShortIfStatementsOnASingleLine: false
 BreakBeforeBraces: Allman
 SpaceBeforeParens: ControlStatements
 PointerAlignment: Left
-
+# Note: IndentExternBlock is unavailable in this clang-format version.
+# To avoid indented extern "C" blocks, keep functions declared in headers
+# and minimize use of explicit extern blocks within sources.

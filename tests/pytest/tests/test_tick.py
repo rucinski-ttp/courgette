@@ -11,4 +11,4 @@ def test_tick_message(serial_conn):
         for cmd, flags, pl in msgs:
             if cmd == CMD_LOG and b"[tick]" in pl:
                 return
-    assert False, f"Did not observe [tick] log frame. Got bytes: {buf[:200]!r}"
+    assert False, "Did not observe [tick] LOG frame with valid CRC"

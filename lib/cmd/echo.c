@@ -6,9 +6,13 @@ static int handle_echo(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint3
     if (rsp && rsp_len)
     {
         if (*rsp_len < req_len)
+        {
             return -1;
+        }
         if (req_len)
+        {
             memcpy(rsp, req, req_len);
+        }
         *rsp_len = req_len;
     }
     return 0;

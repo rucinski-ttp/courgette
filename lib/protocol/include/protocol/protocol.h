@@ -41,7 +41,8 @@ extern "C"
         uint32_t payload_len;
         uint32_t payload_pos;
         uint32_t crc_expect;
-        uint32_t crc_acc;
+        uint32_t crc_acc;     /* standard: init=0xFFFFFFFF, final XOR */
+        uint32_t crc_acc_alt; /* alternate: init=0, no final XOR */
     } proto_stream_t;
 
     typedef void (*proto_on_msg_fn)(const proto_msg_t* msg, void* user);

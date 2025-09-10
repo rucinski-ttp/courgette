@@ -14,7 +14,9 @@ static int handle_version(const uint8_t* req, uint32_t req_len, uint8_t* rsp, ui
     if (rsp && rsp_len)
     {
         if (*rsp_len < n)
+        {
             return -1;
+        }
         memcpy(rsp, s, n);
         *rsp_len = n;
     }

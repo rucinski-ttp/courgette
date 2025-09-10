@@ -2,7 +2,12 @@
 #include <zephyr/sys/printk.h>
 
 #include "app/activity_led.h"
+#include "app/app_runtime.h"
+#include "app/cmd_sd.h"
+#include "app/error_indicator.h"
 #include "app/heartbeat.h"
+#include "app/proto_task.h"
+#include "app/sd_ops.h"
 #include "app/serial_async.h"
 #include "cmd/dispatch.h"
 #include "cmd/echo.h"
@@ -13,15 +18,30 @@
 #include <string.h>
 #include <zephyr/kernel.h>
 
-/* start protocol thread */
-void proto_task_start(void);
+/* SD warmup thread to nudge early mount */
+static void sd_warmup(void* a, void* b, void* c) // NOLINT(bugprone-easily-swappable-parameters)
+{
+    ARG_UNUSED(a);
+    ARG_UNUSED(b);
+    ARG_UNUSED(c);
+    k_sleep(K_MSEC(150));
+    (void)sd_status();
+}
+K_THREAD_STACK_DEFINE(sd_warm_stack, 512);
+static struct k_thread sd_warm_desc;
 
 void main(void)
 {
-    /* Platform serial (async) */
+    /* Heartbeat LED early so we can observe liveness regardless of UART */
+    (void)heartbeat_init();
+    (void)error_indicator_init();
+
+    /* Platform serial (async). If it fails, proceed so heartbeat still runs
+     * for diagnosis (no fallbacks will be used in handlers). */
     if (platform_serial_init() != 0)
     {
-        /* If UART fails, nothing else will work */
+        /* Flag UART not ready: code 1 */
+        error_indicator_add(ERR_UART_NOT_READY);
     }
 
     /* Register commands */
@@ -29,18 +49,22 @@ void main(void)
     (void)cmd_version_init();
     (void)cmd_reboot_init();
     (void)cmd_mem_init();
+    (void)cmd_sd_init();
 
     /* Start protocol processing after handlers are registered */
     proto_task_start();
+    /* Start periodic tick LOGs for integration checks */
+    proto_start_tick();
 
-    /* Heartbeat LED */
-    if (heartbeat_init() != 0)
-    {
-        /* ignore */
-    }
+    /* Heartbeat already started above */
 
     /* Activity LED (blink on mem read/write) */
     (void)activity_led_init();
+
+    /* SD ops worker. Do not touch the SD card at boot; defer mounting until
+     * the host sends an SD command. This avoids early-driver races that have
+     * been causing boot-time faults on some boards. */
+    (void)sd_ops_init();
 
     /* Send boot log over protocol */
     {
@@ -57,25 +81,21 @@ void main(void)
         }
     }
 
-    uint32_t tick = 0;
-    while (1)
+    /* Signal readiness after handlers and workers are up */
     {
-        k_sleep(K_MSEC(1000));
-        tick++;
-        char msg[32];
-        int n = snprintk(msg, sizeof(msg), "[tick] %lu", (unsigned long)tick);
-        if (n > 0)
+        const char* ready = "[READY]";
+        uint8_t frame[64];
+        size_t flen = 0;
+        proto_msg_t m = {.cmd = CMD_ID_LOG,
+                         .flags = 0x02,
+                         .payload = (const uint8_t*)ready,
+                         .length = (uint32_t)strlen(ready)};
+        if (proto_encode(&m, frame, sizeof(frame), &flen) == PROTO_OK)
         {
-            uint8_t frame[96];
-            size_t flen = 0;
-            proto_msg_t m = {.cmd = CMD_ID_LOG,
-                             .flags = 0x02,
-                             .payload = (const uint8_t*)msg,
-                             .length = (uint32_t)n};
-            if (proto_encode(&m, frame, sizeof(frame), &flen) == PROTO_OK)
-            {
-                (void)platform_serial_write(frame, flen);
-            }
+            (void)platform_serial_write(frame, flen);
         }
     }
+
+    /* Run idle loop outside of main.c for clarity */
+    app_run_forever();
 }

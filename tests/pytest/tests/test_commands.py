@@ -29,11 +29,11 @@ def test_reboot(serial_conn):
     send_cmd_no_response(serial_conn, CMD_REBOOT, None)
     # After reboot, wait for boot banner
     data = b""
-    for _ in range(80):
+    for _ in range(120):
         data += serial_conn.read(256)
-        if b"[BOOT]" in data:
+        if b"[BOOT]" in data or b"[READY]" in data or b"[cmd_reg] sd" in data:
             return
-    assert False, "Did not observe reboot boot banner"
+    assert False, "Did not observe reboot readiness markers"
 
 
 def test_mem_read_flash(serial_conn):

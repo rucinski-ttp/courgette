@@ -49,6 +49,7 @@ app_strict_warnings(protocol)
 # --- Zephyr/board specific libraries ---
 add_library(drivers STATIC
   src/drivers/heartbeat.c
+  src/drivers/error_indicator.c
 )
 target_include_directories(drivers PUBLIC ${APP_INCLUDE_DIR})
 target_link_libraries(drivers PRIVATE zephyr_interface)
@@ -56,18 +57,29 @@ app_zephyr_warnings(drivers)
 
 add_library(platform STATIC
   src/platform/serial_async.c
+  src/platform/fatal.c
 )
 target_include_directories(platform PUBLIC ${APP_INCLUDE_DIR})
 target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../lib/util/include)
+target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../lib/protocol/include)
+# Access FatFS public headers (ff.h) for FATFS fs_data type
+target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../modules/fs/fatfs/include)
+target_include_directories(platform PRIVATE ${ZEPHYR_BASE}/modules/fatfs)
 target_link_libraries(platform PRIVATE zephyr_interface)
 app_zephyr_warnings(platform)
 
 # --- Application main ---
 target_sources(app PRIVATE
   src/app/main.c
+  src/app/app_runtime.c
   src/app/proto_task.c
+  src/app/cmd_sd.c
   src/drivers/activity_led.c
+  src/platform/sd_ops.c
 )
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../modules/fs/fatfs/include)
+target_include_directories(app PRIVATE ${ZEPHYR_BASE}/modules/fatfs)
+target_compile_definitions(app PRIVATE ZEPHYR_CONFIG_OVERRIDE=zephyr_fatfs_config.h)
 
 add_library(cmd_dispatch STATIC
   ${CMAKE_CURRENT_SOURCE_DIR}/../lib/cmd/dispatch.c)

@@ -1,33 +1,34 @@
 #include "util/crc32.h"
 
-/* CRC-32 (IEEE 802.3) polynomial 0xEDB88320 */
+/* CRC-32 update. On-device delegate to Zephyr's IEEE implementation; on host,
+ * use a portable bitwise fallback. Seed with 0xFFFFFFFF; finalize with ^ 0xFFFFFFFF.
+ */
+#include <stddef.h>
+#include <stdint.h>
 
-static uint32_t crc32_table[256];
-static int crc32_init_done;
-
-static void crc32_init_table(void)
-{
-    if (crc32_init_done)
-        return;
-    for (uint32_t i = 0; i < 256; ++i)
-    {
-        uint32_t c = i;
-        for (uint32_t j = 0; j < 8; ++j)
-        {
-            c = (c & 1) ? (0xEDB88320u ^ (c >> 1)) : (c >> 1);
-        }
-        crc32_table[i] = c;
-    }
-    crc32_init_done = 1;
-}
-
+#ifdef __ZEPHYR__
+uint32_t crc32_ieee_update(uint32_t crc, const uint8_t* data, size_t len);
 uint32_t crc32_update(uint32_t crc, const void* data, size_t len)
 {
-    crc32_init_table();
-    const unsigned char* p = (const unsigned char*)data;
+    return crc32_ieee_update(crc, (const uint8_t*)data, len);
+}
+#else
+uint32_t crc32_update(uint32_t crc, const void* data, size_t len)
+{
+    const uint8_t* p = (const uint8_t*)data;
     for (size_t i = 0; i < len; ++i)
     {
-        crc = crc32_table[(crc ^ p[i]) & 0xFFu] ^ (crc >> 8);
+        crc ^= p[i];
+        for (int b = 0; b < 8; ++b)
+        {
+            uint32_t lsb = crc & 1u;
+        crc >>= 1u;
+            if (lsb)
+            {
+                crc ^= 0xEDB88320u;
+            }
+        }
     }
     return crc;
 }
+#endif
