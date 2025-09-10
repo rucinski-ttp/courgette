@@ -11,6 +11,7 @@
  * Limits: len <= 256. Writes restricted to SRAM/peripheral regions; flash writes are rejected.
  */
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static int in_range(uint32_t addr, uint32_t len, uint32_t start, uint32_t end)
 {
     if (len == 0)
@@ -63,6 +64,7 @@ static int handle_mem_read(const uint8_t* req, uint32_t req_len, uint8_t* rsp, u
                        ((uint32_t)req[7] << 24u);
         if (len <= 256u && *rsp_len >= len && (is_flash(addr, len) || is_sram(addr, len)))
         {
+            // NOLINTNEXTLINE(performance-no-int-to-ptr)
             const volatile uint8_t* p = (const volatile uint8_t*)addr;
             for (uint32_t i = 0; i < len; ++i)
             {
@@ -91,6 +93,7 @@ static int handle_mem_write(const uint8_t* req, uint32_t req_len, uint8_t* rsp, 
                        ((uint32_t)req[7] << 24u);
         if (len <= 256u && (8u + len) <= req_len && is_sram(addr, len) && !is_flash(addr, len))
         {
+            // NOLINTNEXTLINE(performance-no-int-to-ptr)
             volatile uint8_t* p = (volatile uint8_t*)addr;
             for (uint32_t i = 0; i < len; ++i)
             {
@@ -105,7 +108,13 @@ static int handle_mem_write(const uint8_t* req, uint32_t req_len, uint8_t* rsp, 
 int cmd_mem_init(void)
 {
     int rc = 0;
-    rc |= cmd_register(CMD_ID_MEM_READ, handle_mem_read);
-    rc |= cmd_register(CMD_ID_MEM_WRITE, handle_mem_write);
+    if (cmd_register(CMD_ID_MEM_READ, handle_mem_read) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_MEM_WRITE, handle_mem_write) != 0)
+    {
+        rc = -1;
+    }
     return rc;
 }

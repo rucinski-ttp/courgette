@@ -78,7 +78,8 @@ static int copy_cstr_local(char* dst, size_t cap, const uint8_t* p, uint32_t n, 
 }
 static uint32_t le32(const uint8_t* p)
 {
-    return (uint32_t)p[0] | ((uint32_t)p[1] << 8u) | ((uint32_t)p[2] << 16u) | ((uint32_t)p[3] << 24u);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8u) | ((uint32_t)p[2] << 16u) |
+           ((uint32_t)p[3] << 24u);
 }
 static void wr_le32(uint8_t* p, uint32_t v)
 {
@@ -407,20 +408,59 @@ static int h_rawread(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint32_
 int cmd_sd_init(void)
 {
     int rc = 0;
-    if (cmd_register(CMD_ID_SD_FORMAT, h_format) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_LIST, h_list) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_READ, h_read) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_WRITE, h_write) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_RENAME, h_rename) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_DELETE, h_delete) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_MKDIR, h_mkdir) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_STAT, h_stat) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_CHECKSUM, h_checksum) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_STATUS, h_status) != 0) { rc = -1; }
-    if (cmd_register(CMD_ID_SD_PEEK, h_peek) != 0) { rc = -1; }
+    if (cmd_register(CMD_ID_SD_FORMAT, h_format) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_LIST, h_list) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_READ, h_read) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_WRITE, h_write) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_RENAME, h_rename) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_DELETE, h_delete) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_MKDIR, h_mkdir) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_STAT, h_stat) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_CHECKSUM, h_checksum) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_STATUS, h_status) != 0)
+    {
+        rc = -1;
+    }
+    if (cmd_register(CMD_ID_SD_PEEK, h_peek) != 0)
+    {
+        rc = -1;
+    }
 #ifdef __ZEPHYR__
-    if (cmd_register(CMD_ID_SD_RAWREAD, h_rawread) != 0) { rc = -1; }
+    if (cmd_register(CMD_ID_SD_RAWREAD, h_rawread) != 0)
+    {
+        rc = -1;
+    }
 #endif
-    if (cmd_register(CMD_ID_SD_FILL, h_fill) != 0) { rc = -1; }
+    if (cmd_register(CMD_ID_SD_FILL, h_fill) != 0)
+    {
+        rc = -1;
+    }
     return rc;
 }

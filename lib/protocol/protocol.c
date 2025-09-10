@@ -42,7 +42,7 @@ proto_rc_t proto_encode(const proto_msg_t* msg, uint8_t* out, size_t out_cap, si
             out[o++] = msg->flags;
             uint16_t cmd_le = le16(msg->cmd);
             out[o++] = (uint8_t)(cmd_le & 0xFFu);
-            out[o++] = (uint8_t)((cmd_le >> 8u) & 0xFFu);
+            out[o++] = (uint8_t)(((uint32_t)cmd_le >> 8u) & 0xFFu);
             uint32_t len_le = le32(msg->length);
             out[o++] = (uint8_t)(len_le & 0xFFu);
             out[o++] = (uint8_t)((len_le >> 8u) & 0xFFu);
@@ -96,9 +96,13 @@ void proto_stream_init(proto_stream_t* s)
 
 static inline uint32_t rd_le32(const uint8_t* p)
 {
-    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8u) | ((uint32_t)p[2] << 16u) |
+           ((uint32_t)p[3] << 24u);
 }
-static inline uint16_t rd_le16(const uint8_t* p) { return (uint16_t)p[0] | ((uint16_t)p[1] << 8); }
+static inline uint16_t rd_le16(const uint8_t* p)
+{
+    return (uint16_t)p[0] | (uint16_t)(((uint32_t)p[1] << 8u));
+}
 
 static void dbg_append(char* dst, size_t* pos, const char* txt)
 {
@@ -124,7 +128,7 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
         switch (s->state)
         {
         case 0: /* find magic */
-            s->magic_acc = (s->magic_acc >> 8) | ((uint32_t)b << 24);
+            s->magic_acc = (s->magic_acc >> 8u) | ((uint32_t)b << 24u);
             if (s->magic_acc == PROTO_MAGIC)
             {
                 s->state = 1;
@@ -147,35 +151,37 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
                     dbg_append(dbg, &p, prefix);
                     /* Append fields in simple decimal/hex */
                     const char* vstr = "v=";
-                    memcpy(&dbg[p], vstr, 2);
-                    p += 2;
+                    dbg_append(dbg, &p, vstr);
                     dbg[p++] = (char)('0' + (version % 10));
                     const char* flstr = " fl=0x";
-                    memcpy(&dbg[p], flstr, 6);
-                    p += 6;
+                    dbg_append(dbg, &p, flstr);
                     static const char hex[] = "0123456789abcdef";
-                    dbg[p++] = hex[(s->hdr[1] >> 4) & 0xF];
-                    dbg[p++] = hex[s->hdr[1] & 0xF];
+                    dbg[p++] = hex[(((unsigned)s->hdr[1] >> 4u) & 0xFu)];
+                    dbg[p++] = hex[((unsigned)s->hdr[1] & 0xFu)];
                     uint16_t d_cmd = rd_le16(&s->hdr[2]);
                     uint32_t d_len = rd_le32(&s->hdr[4]);
                     uint32_t d_crc = rd_le32(&s->hdr[8]);
                     const char* cstr = " cmd=0x";
-                    memcpy(&dbg[p], cstr, 7);
-                    p += 7;
-                    for (int sh = 12; sh >= 0; sh -= 4)
+                    dbg_append(dbg, &p, cstr);
+                    for (unsigned sh = 12u;; sh -= 4u)
                     {
-                        dbg[p++] = hex[(d_cmd >> sh) & 0xF];
+                        dbg[p++] = hex[(((unsigned)d_cmd >> sh) & 0xFu)];
+                        if (sh == 0u)
+                        {
+                            break;
+                        }
                     }
                     const char* lstr = " len=";
-                    memcpy(&dbg[p], lstr, 5);
-                    p += 5;
+                    dbg_append(dbg, &p, lstr);
                     /* append len as decimal (limited) */
                     {
                         char tmp[10];
                         int ti = 0;
                         uint32_t t = d_len;
                         if (t == 0)
+                        {
                             tmp[ti++] = '0';
+                        }
                         else
                         {
                             char rev[10];
@@ -186,17 +192,24 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
                                 t /= 10u;
                             }
                             while (ri)
+                            {
                                 tmp[ti++] = rev[--ri];
+                            }
                         }
-                        memcpy(&dbg[p], tmp, (size_t)ti);
-                        p += (size_t)ti;
+                        for (int j = 0; j < ti && p < sizeof(((proto_stream_t*)0)->hdr) * 4; ++j)
+                        {
+                            dbg[p++] = tmp[j];
+                        }
                     }
                     const char* crs = " crc=";
-                    memcpy(&dbg[p], crs, 5);
-                    p += 5;
-                    for (int sh = 28; sh >= 0; sh -= 4)
+                    dbg_append(dbg, &p, crs);
+                    for (unsigned sh = 28u;; sh -= 4u)
                     {
-                        dbg[p++] = hex[(d_crc >> sh) & 0xF];
+                        dbg[p++] = hex[(d_crc >> sh) & 0xFu];
+                        if (sh == 0u)
+                        {
+                            break;
+                        }
                     }
                     dbg[p] = '\0';
                     proto_debug_log(dbg);
@@ -226,11 +239,13 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
                         }
                         static const char hex[] = "0123456789abcdef";
                         uint32_t precrc = s->crc_acc;
-                        for (unsigned sh = 28u; ; sh -= 4u)
+                        for (unsigned sh = 28u;; sh -= 4u)
                         {
-                            dbg[p++] = hex[(precrc >> sh) & 0xF];
+                            dbg[p++] = hex[(precrc >> sh) & 0xFu];
                             if (sh == 0u)
+                            {
                                 break;
+                            }
                         }
                         dbg[p] = 0;
                         proto_debug_log(dbg);
@@ -244,19 +259,23 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
                         static const char hex[] = "0123456789abcdef";
                         const char* pre = "[proto_crc_mismatch] exp=";
                         dbg_append(dbg, &p, pre);
-                        for (unsigned sh = 28u; ; sh -= 4u)
+                        for (unsigned sh = 28u;; sh -= 4u)
                         {
-                            dbg[p++] = hex[(s->crc_expect >> sh) & 0xF];
+                            dbg[p++] = hex[(s->crc_expect >> sh) & 0xFu];
                             if (sh == 0u)
+                            {
                                 break;
+                            }
                         }
                         const char* mid = " got=";
                         dbg_append(dbg, &p, mid);
-                        for (unsigned sh = 28u; ; sh -= 4u)
+                        for (unsigned sh = 28u;; sh -= 4u)
                         {
-                            dbg[p++] = hex[(crc_calc_std >> sh) & 0xF];
+                            dbg[p++] = hex[(crc_calc_std >> sh) & 0xFu];
                             if (sh == 0u)
+                            {
                                 break;
+                            }
                         }
                         dbg[p] = '\0';
                         proto_debug_log(dbg);
@@ -303,19 +322,23 @@ void proto_stream_feed(proto_stream_t* s, const uint8_t* data, size_t len, proto
                     static const char hex[] = "0123456789abcdef";
                     const char* pre = "[proto_crc_mismatch] exp=";
                     dbg_append(dbg, &p, pre);
-                    for (unsigned sh = 28u; ; sh -= 4u)
+                    for (unsigned sh = 28u;; sh -= 4u)
                     {
-                        dbg[p++] = hex[(s->crc_expect >> sh) & 0xF];
+                        dbg[p++] = hex[(s->crc_expect >> sh) & 0xFu];
                         if (sh == 0u)
+                        {
                             break;
+                        }
                     }
                     const char* mid = " got=";
                     dbg_append(dbg, &p, mid);
-                    for (unsigned sh = 28u; ; sh -= 4u)
+                    for (unsigned sh = 28u;; sh -= 4u)
                     {
-                        dbg[p++] = hex[(crc_calc_std >> sh) & 0xF];
+                        dbg[p++] = hex[(crc_calc_std >> sh) & 0xFu];
                         if (sh == 0u)
+                        {
                             break;
+                        }
                     }
                     dbg[p] = '\0';
                     proto_debug_log(dbg);
