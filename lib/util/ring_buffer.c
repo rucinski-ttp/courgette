@@ -36,3 +36,38 @@ size_t rb_read(rb_t* rb, uint8_t* out, size_t len)
     }
     return to_read;
 }
+
+size_t rb_peek_contig(const rb_t* rb, const uint8_t** ptr)
+{
+    size_t used = rb_used(rb);
+    if (used == 0)
+    {
+        if (ptr)
+        {
+            *ptr = NULL;
+        }
+        return 0;
+    }
+    if (ptr)
+    {
+        *ptr = &rb->buf[rb->tail];
+    }
+    if (rb->tail < rb->head)
+    {
+        return rb->head - rb->tail;
+    }
+    else
+    {
+        return rb->size - rb->tail; /* wrap-around region */
+    }
+}
+
+void rb_consume(rb_t* rb, size_t n)
+{
+    size_t used = rb_used(rb);
+    if (n > used)
+    {
+        n = used;
+    }
+    rb->tail = (rb->tail + n) % rb->size;
+}

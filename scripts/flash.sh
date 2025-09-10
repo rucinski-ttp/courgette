@@ -28,4 +28,11 @@ fi
 
 echo "[flash] Flashing ${BOARD} using west flash"
 west flash -d "$BUILD_DIR" --skip-rebuild
-echo "[flash] Flash complete"
+echo "[flash] Flash complete; issuing reset+run via OpenOCD"
+OCD_CFG=$(find "$(pwd)/zephyr/boards" -type f -name "openocd_${BOARD}.cfg" -print -quit)
+if [ -n "$OCD_CFG" ]; then
+  openocd -f "$OCD_CFG" -c "init; reset run; sleep 2000; shutdown" >/dev/null 2>&1 || true
+  echo "[flash] Target resumed"
+else
+  echo "[flash] WARN: Could not find OpenOCD cfg for ${BOARD}; skipping reset-run"
+fi

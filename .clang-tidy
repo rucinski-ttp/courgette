@@ -1,9 +1,15 @@
 Checks: >
   -*,
+  readability-braces-around-statements,
   bugprone-*,
   performance-*,
   portability-*,
-  clang-analyzer-*
+  clang-analyzer-*,
+  hicpp-signed-bitwise
 WarningsAsErrors: '*'
+# Limit tidy scope to application code to avoid noise from third-party/legacy libs during cleanup
 HeaderFilterRegex: '^(app|lib)/.*'
 FormatStyle: none
+CheckOptions:
+  - key:             readability-braces-around-statements.ShortStatementLines
+    value:           '0'

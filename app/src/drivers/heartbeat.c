@@ -3,6 +3,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 
+#include "app/error_indicator.h"
 #include "app/heartbeat.h"
 
 #if !DT_NODE_HAS_STATUS(DT_ALIAS(led0), okay)
@@ -14,7 +15,7 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 static K_THREAD_STACK_DEFINE(heartbeat_stack, 512);
 static struct k_thread heartbeat_thread;
 
-static void heartbeat_entry(void* a, void* b, void* c)
+static void heartbeat_entry(void* a, void* b, void* c)  // NOLINT(bugprone-easily-swappable-parameters)
 {
     ARG_UNUSED(a);
     ARG_UNUSED(b);
@@ -23,6 +24,13 @@ static void heartbeat_entry(void* a, void* b, void* c)
     int level = 0;
     for (;;)
     {
+        if (error_indicator_active())
+        {
+            /* Yield to error indicator; keep LED off to avoid pattern clash */
+            gpio_pin_set_dt(&led, 0);
+            k_sleep(K_MSEC(100));
+            continue;
+        }
         gpio_pin_set_dt(&led, level);
         level = !level;
         k_sleep(K_MSEC(500));
@@ -36,7 +44,8 @@ int heartbeat_init(void)
         return -ENODEV;
     }
 
-    int ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
+    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW); // NOLINT(hicpp-signed-bitwise)
+    int ret = gpio_pin_configure_dt(&led, fl);
     if (ret)
     {
         return ret;

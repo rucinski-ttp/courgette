@@ -29,8 +29,19 @@ Command Semantics
 - Echo (0x0001): request payload echoed as response payload.
 - Version (0x0002): response payload is ASCII git short hash.
 - Reboot (0x0003): device reboots; no response payload.
- - MemRead (0x0100): request payload = <u32 addr><u32 len>, response payload = len bytes read.
- - MemWrite (0x0101): request payload = <u32 addr><u32 len><data>, response payload = empty on success.
+- MemRead (0x0100): request payload = <u32 addr><u32 len>, response payload = len bytes read.
+- MemWrite (0x0101): request payload = <u32 addr><u32 len><data>, response payload = empty on success.
+- SD.Format (0x0200): formats the SD card (FATFS); response empty. This runs synchronously and will block until mkfs+mount complete.
+- SD.List (0x0201): request payload = path\0, response payload = text lines ("D name\n" or "F name size\n"). Paths are relative to the active mount; `/` is the root.
+- SD.Read (0x0202): request payload = path\0 <u32 offset><u32 len>, response payload = up to len bytes.
+- SD.Write (0x0203): request payload = path\0 <u32 offset><u32 len><data>, response payload = empty on success.
+- SD.Rename (0x0204): request payload = old\0 new\0, response empty on success.
+- SD.Delete (0x0205): request payload = path\0, response empty on success.
+- SD.Mkdir (0x0206): request payload = path\0, response empty on success.
+- SD.Stat (0x0207): request payload = path\0, response payload = <u32 size><u32 flags> where bit0=1 if directory.
+- SD.Checksum (0x0208): request payload = path\0, response payload = <u32 crc32> over file contents.
+- SD.Status (0x0209): no request payload; response payload = <s32 rc> mount status (0 ok, negative errno otherwise).
+- SD.Fill (0x020C): request payload = path\0 <u32 size><u32 seed>; device creates/overwrites the file with a deterministic xorshift32 pattern (no serial bulk transfer). Response empty on success.
 
 Safety
 
@@ -52,4 +63,4 @@ Notes
 
 - The stream parser tolerates unrelated UART bytes by scanning for magic,
   enforces CRC checks, and resynchronizes on errors (invalid frames are dropped).
-- Larger payloads can be supported by adjusting internal buffers.
+- Larger payloads can be supported by adjusting internal buffers. UART logs are minimized to avoid interfering with response latencies.

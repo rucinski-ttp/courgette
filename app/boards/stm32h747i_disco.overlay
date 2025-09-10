@@ -1,0 +1,5 @@
+/* Remove card-detect GPIO to force always-present behavior on SDMMC1. */
+&sdmmc1 {
+    /delete-property/ cd-gpios;
+    bus-width = <4>;
+};
