@@ -172,7 +172,8 @@ static int try_mount(struct fs_mount_t* m)
         return 0;
     }
     /* If using disk-access path, ensure disk is ready first */
-    if (((unsigned)m->flags & (unsigned)FS_MOUNT_FLAG_USE_DISK_ACCESS) != 0u) // NOLINT(hicpp-signed-bitwise)
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    if (((unsigned)m->flags & (unsigned)FS_MOUNT_FLAG_USE_DISK_ACCESS) != 0u)
     {
         int rdy = ensure_disk_ready();
         if (rdy != 0)
@@ -317,7 +318,7 @@ static int read_file(const char* rel_path, uint32_t offset, uint8_t* out, uint32
 #endif
     if (rc != 0)
     {
-        return rc;
+        goto out_no_close;
     }
     if (offset)
     {
@@ -341,8 +342,7 @@ static int read_file(const char* rel_path, uint32_t offset, uint8_t* out, uint32
 #endif
         if (rc != 0)
         {
-            fs_close(&f);
-            return rc;
+            goto out_close;
         }
     }
     uint32_t remain = *inout_len;
@@ -408,7 +408,9 @@ static int read_file(const char* rel_path, uint32_t offset, uint8_t* out, uint32
         }
     }
 #endif
+out_close:
     fs_close(&f);
+out_no_close:
     return rc;
 }
 
@@ -448,7 +450,7 @@ static int write_file(const char* rel_path, uint32_t offset, const uint8_t* data
 #endif
     if (rc != 0)
     {
-        return rc;
+        goto out_no_close_w;
     }
     if (offset == 0)
     {
@@ -465,8 +467,7 @@ static int write_file(const char* rel_path, uint32_t offset, const uint8_t* data
 #endif
     if (rc != 0)
     {
-        fs_close(&f);
-        return rc;
+        goto out_close_w;
     }
 #if SD_DEBUG
     {
@@ -512,7 +513,9 @@ static int write_file(const char* rel_path, uint32_t offset, const uint8_t* data
     {
         rc = 0;
     }
+out_close_w:
     fs_close(&f);
+out_no_close_w:
     return rc;
 }
 
@@ -1199,7 +1202,8 @@ int sd_status(void)
 /* Larger static buffer to speed up big fills without stressing thread stacks. */
 static uint8_t s_fill_buf[8192];
 
-int sd_fill_pattern(const char* rel_path, uint32_t size, uint32_t seed)  // NOLINT(bugprone-easily-swappable-parameters)
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+int sd_fill_pattern(const char* rel_path, uint32_t size, uint32_t seed)
 {
     int rc = ensure_mounted();
     if (rc != 0)

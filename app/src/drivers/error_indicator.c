@@ -39,7 +39,7 @@ static void blink_once(int on_ms, int off_ms)
 #endif
 }
 
-static void err_task(void* a, void* b, void* c)  // NOLINT(bugprone-easily-swappable-parameters)
+static void err_task(void* a, void* b, void* c) // NOLINT(bugprone-easily-swappable-parameters)
 {
     ARG_UNUSED(a);
     ARG_UNUSED(b);
@@ -59,10 +59,10 @@ static void err_task(void* a, void* b, void* c)  // NOLINT(bugprone-easily-swapp
         /* Iterate codes from LSB to MSB; code number is bit index+1. */
         for (unsigned bit = 0; bit < 16; ++bit)
         {
-        if ((mask & (1u << bit)) == 0)
-        {
-            continue;
-        }
+            if ((mask & (1u << bit)) == 0)
+            {
+                continue;
+            }
             unsigned count = bit + 1;
             /* Inter-code separator: longer off gap */
             k_sleep(K_MSEC(200));
@@ -85,7 +85,9 @@ int error_indicator_init(void)
     led_ready = device_is_ready(led0.port);
     if (led_ready)
     {
-        gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW); // NOLINT(hicpp-signed-bitwise)
+        // NOLINTNEXTLINE(hicpp-signed-bitwise)
+        gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
+                                         (unsigned long)GPIO_OUTPUT_INIT_LOW);
         (void)gpio_pin_configure_dt(&led0, fl);
     }
 #else

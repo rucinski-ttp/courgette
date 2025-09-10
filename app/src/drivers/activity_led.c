@@ -27,7 +27,9 @@ int activity_led_init(void)
     {
         return -ENODEV;
     }
-    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW); // NOLINT(hicpp-signed-bitwise)
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
+                                     (unsigned long)GPIO_OUTPUT_INIT_LOW);
     int ret = gpio_pin_configure_dt(&led, fl);
     if (ret)
     {

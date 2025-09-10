@@ -25,53 +25,53 @@ int cmd_register(uint16_t cmd_id, cmd_handler_fn fn)
     {
         g_cmds[g_cmd_count++] = (cmd_entry_t){.id = cmd_id, .fn = fn};
         {
-        char dbg[64];
-        unsigned n = (unsigned)g_cmd_count;
-        /* Report: [cmd_register] id=0xXXXX count=N */
-        static const char hex[] = "0123456789abcdef";
-        int p = 0;
-        const char* pre = "[cmd_register] id=0x";
-        while (*pre)
-        {
-            dbg[p++] = *pre++;
-        }
-        dbg[p++] = hex[(cmd_id >> 12) & 0xF];
-        dbg[p++] = hex[(cmd_id >> 8) & 0xF];
-        dbg[p++] = hex[(cmd_id >> 4) & 0xF];
-        dbg[p++] = hex[cmd_id & 0xF];
-        const char* mid = " count=";
-        pre = mid;
-        while (*pre)
-        {
-            dbg[p++] = *pre++;
-        }
-        char tmp[10];
-        int ti = 0;
-        if (n == 0)
-        {
-            tmp[ti++] = '0';
-        }
-        else
-        {
-            unsigned t = n;
-            char rev[10];
-            int ri = 0;
-            while (t && ri < 10)
+            char dbg[64];
+            unsigned n = (unsigned)g_cmd_count;
+            /* Report: [cmd_register] id=0xXXXX count=N */
+            static const char hex[] = "0123456789abcdef";
+            int p = 0;
+            const char* pre = "[cmd_register] id=0x";
+            while (*pre)
             {
-                rev[ri++] = (char)('0' + (t % 10));
-                t /= 10;
+                dbg[p++] = *pre++;
             }
-            while (ri)
+            dbg[p++] = hex[((unsigned)cmd_id >> 12u) & 0xFu];
+            dbg[p++] = hex[((unsigned)cmd_id >> 8u) & 0xFu];
+            dbg[p++] = hex[((unsigned)cmd_id >> 4u) & 0xFu];
+            dbg[p++] = hex[(unsigned)cmd_id & 0xFu];
+            const char* mid = " count=";
+            pre = mid;
+            while (*pre)
             {
-                tmp[ti++] = rev[--ri];
+                dbg[p++] = *pre++;
             }
-        }
-        for (int i = 0; i < ti; i++)
-        {
-            dbg[p++] = tmp[i];
-        }
-        dbg[p] = 0;
-        proto_debug_log(dbg);
+            char tmp[10];
+            int ti = 0;
+            if (n == 0)
+            {
+                tmp[ti++] = '0';
+            }
+            else
+            {
+                unsigned t = n;
+                char rev[10];
+                int ri = 0;
+                while (t && ri < 10)
+                {
+                    rev[ri++] = (char)('0' + (t % 10));
+                    t /= 10;
+                }
+                while (ri)
+                {
+                    tmp[ti++] = rev[--ri];
+                }
+            }
+            for (int i = 0; i < ti; i++)
+            {
+                dbg[p++] = tmp[i];
+            }
+            dbg[p] = 0;
+            proto_debug_log(dbg);
         }
     }
     return rc;
@@ -98,14 +98,16 @@ int cmd_dispatch(uint16_t cmd_id, const uint8_t* req, uint32_t req_len, uint8_t*
             dbg[p++] = *pre++;
         }
         static const char hex[] = "0123456789abcdef";
-        dbg[p++] = hex[(cmd_id >> 12) & 0xF];
-        dbg[p++] = hex[(cmd_id >> 8) & 0xF];
-        dbg[p++] = hex[(cmd_id >> 4) & 0xF];
-        dbg[p++] = hex[cmd_id & 0xF];
+        dbg[p++] = hex[((unsigned)cmd_id >> 12u) & 0xFu];
+        dbg[p++] = hex[((unsigned)cmd_id >> 8u) & 0xFu];
+        dbg[p++] = hex[((unsigned)cmd_id >> 4u) & 0xFu];
+        dbg[p++] = hex[(unsigned)cmd_id & 0xFu];
         const char* suf = " count=";
         pre = suf;
         while (*pre)
+        {
             dbg[p++] = *pre++;
+        }
         unsigned n = (unsigned)g_cmd_count;
         char tmp[10];
         int ti = 0;

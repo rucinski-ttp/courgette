@@ -9,9 +9,9 @@ static int handle_echo(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint3
         {
             return -1;
         }
-        if (req_len)
+        for (uint32_t i = 0; i < req_len; ++i)
         {
-            memcpy(rsp, req, req_len);
+            rsp[i] = req[i];
         }
         *rsp_len = req_len;
     }

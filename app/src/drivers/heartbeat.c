@@ -15,7 +15,9 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 static K_THREAD_STACK_DEFINE(heartbeat_stack, 512);
 static struct k_thread heartbeat_thread;
 
-static void heartbeat_entry(void* a, void* b, void* c)  // NOLINT(bugprone-easily-swappable-parameters)
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+static void heartbeat_entry(void* a, void* b,
+                            void* c)
 {
     ARG_UNUSED(a);
     ARG_UNUSED(b);
@@ -44,7 +46,9 @@ int heartbeat_init(void)
         return -ENODEV;
     }
 
-    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW); // NOLINT(hicpp-signed-bitwise)
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
+                                     (unsigned long)GPIO_OUTPUT_INIT_LOW);
     int ret = gpio_pin_configure_dt(&led, fl);
     if (ret)
     {

@@ -18,7 +18,9 @@ static void fatal_blink(unsigned count)
     {
         return;
     }
-    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW); // NOLINT(hicpp-signed-bitwise)
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
+                                     (unsigned long)GPIO_OUTPUT_INIT_LOW);
     (void)gpio_pin_configure_dt(&led0, fl);
     for (unsigned i = 0; i < count; ++i)
     {

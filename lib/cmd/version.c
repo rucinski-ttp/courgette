@@ -17,7 +17,10 @@ static int handle_version(const uint8_t* req, uint32_t req_len, uint8_t* rsp, ui
         {
             return -1;
         }
-        memcpy(rsp, s, n);
+        for (uint32_t i = 0; i < n; ++i)
+        {
+            rsp[i] = (uint8_t)s[i];
+        }
         *rsp_len = n;
     }
     return 0;

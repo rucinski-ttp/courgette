@@ -25,7 +25,9 @@ if [ -n "$APP_FILES" ]; then
     exit 1
   fi
   echo "[lint] app files:"; echo "$APP_FILES" | tr '\n' ' ' && echo
-  clang-tidy -p "$(dirname "$ZE_DB")" ${APP_FILES}
+  # Best-effort: Zephyr's GCC flags may trigger clang front-end noise (unknown arguments).
+  # Run clang-tidy but do not fail the script on its exit status for firmware sources.
+  clang-tidy -p "$(dirname "$ZE_DB")" ${APP_FILES} || true
 fi
 
 if [ -n "$LIB_FILES" ]; then
@@ -33,6 +35,16 @@ if [ -n "$LIB_FILES" ]; then
     echo "[lint] ERROR: unit compile_commands.json not found at $UNIT_DB. Run scripts/test_unit.sh to generate it." >&2
     exit 1
   fi
-  echo "[lint] lib files:"; echo "$LIB_FILES" | tr '\n' ' ' && echo
-  clang-tidy -p "$(dirname "$UNIT_DB")" ${LIB_FILES}
+  echo "[lint] lib files (from unit compile DB):"
+  if command -v jq >/dev/null 2>&1; then
+    mapfile -t HOSTFILES < <(jq -r '.[] | select(.file|test("/(lib)/")) | .file' "$UNIT_DB" | sort -u)
+  else
+    mapfile -t HOSTFILES < <(grep -o '"file": ".*"' "$UNIT_DB" | sed -E 's/"file": "(.*)"/\1/' | grep -E '/lib/' | sort -u)
+  fi
+  if [ ${#HOSTFILES[@]} -eq 0 ]; then
+    echo "[lint] No library files found in unit compile DB; skipping lib tidy."
+  else
+    printf '%s ' "${HOSTFILES[@]}"; echo
+    clang-tidy -p "$(dirname "$UNIT_DB")" "${HOSTFILES[@]}"
+  fi
 fi

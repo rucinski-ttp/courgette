@@ -22,7 +22,7 @@ uint32_t crc32_update(uint32_t crc, const void* data, size_t len)
         for (int b = 0; b < 8; ++b)
         {
             uint32_t lsb = crc & 1u;
-        crc >>= 1u;
+            crc >>= 1u;
             if (lsb)
             {
                 crc ^= 0xEDB88320u;
