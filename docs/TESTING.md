@@ -12,7 +12,7 @@ Unit Tests (host)
 Integration Tests (board)
 
 - Python `pytest` harness in `tests/pytest/` drives the binary protocol end-to-end
-  (echo/version/mem + full SD card operations).
+  (echo/version/mem + full SD card operations + display checks).
 - The serial fixture auto-detects the ST-LINK VCP, drains early logs, and performs a `VERSION`
   handshake. A `[READY]` / periodic `[tick]` LOG frame indicates liveness. Tests skip when the
   SD card is not present or not mountable.
@@ -23,6 +23,12 @@ Integration Tests (board)
 ./scripts/flash.sh
 ./scripts/test_integration.sh
 ```
+
+Display Helpers
+
+- Automated display tests validate solid color fill and optional readback.
+- Manual helper: `./scripts/run_manual_integration_tests` cycles colors and prompts for Y/N.
+- CLI: `./tools/display_cli.py` supports `info`, `fill`, `cycle`, `id`, and `blank on/off`.
 
 Manual SD CLI
 

@@ -12,6 +12,5 @@ else
   echo "[env] WARNING: .venv not found. Run scripts/setup.sh first." >&2
 fi
 
-export BOARD="${BOARD:-stm32h747i_disco_m7}"
+export BOARD="${BOARD:-stm32h747i_disco/stm32h747xx/m7}"
 echo "[env] Activated. BOARD=${BOARD}"
-

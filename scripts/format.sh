@@ -3,7 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
-FILES=$(git ls-files | grep -E '\.(c|h|cpp|hpp)$' || true)
+# Only format our sources; avoid third-party/vendor trees.
+# Paths: app/, lib/, tests/, tools/, scripts/
+FILES=$(git ls-files | grep -E '^(app|lib|tests|tools|scripts)/' | grep -E '\.(c|h|cpp|hpp)$' || true)
 if ! command -v clang-format >/dev/null 2>&1; then
   echo "clang-format not found. Please install it." >&2
   exit 1
@@ -15,4 +17,4 @@ if [ -z "${FILES}" ]; then
 fi
 
 echo "Formatting files..."
-echo "${FILES}" | xargs clang-format -i
+echo "${FILES}" | xargs -r clang-format -i

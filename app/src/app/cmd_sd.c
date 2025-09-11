@@ -89,15 +89,47 @@ static void wr_le32(uint8_t* p, uint32_t v)
     p[3] = (v >> 24u) & 0xFFu;
 }
 
+#ifdef __ZEPHYR__
+#include <stdatomic.h>
+static atomic_bool s_sd_fmt_busy = ATOMIC_VAR_INIT(false);
+static void sd_fmt_thread(void* a, void* b, void* c)
+{
+    ARG_UNUSED(a);
+    ARG_UNUSED(b);
+    ARG_UNUSED(c);
+    /* Perform mkfs + remount synchronously on a background thread */
+    (void)sd_format_sync();
+    atomic_store(&s_sd_fmt_busy, false);
+}
+K_THREAD_STACK_DEFINE(sd_fmt_stack, 2048);
+static struct k_thread sd_fmt_desc;
+#endif
+
 static int h_format(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint32_t* rsp_len)
 {
     (void)req;
     (void)req_len;
-    (void)rsp;
-    (void)rsp_len;
+    if (rsp_len)
+    {
+        *rsp_len = 0;
+    }
     activity_led_pulse();
-    /* Asynchronous format to avoid blocking the protocol thread. */
+#ifdef __ZEPHYR__
+    bool expected = false;
+    if (atomic_compare_exchange_strong(&s_sd_fmt_busy, &expected, true))
+    {
+        /* Launch background format thread and return immediately */
+        k_thread_create(&sd_fmt_desc, sd_fmt_stack, K_THREAD_STACK_SIZEOF(sd_fmt_stack), sd_fmt_thread,
+                        NULL, NULL, NULL, K_LOWEST_APPLICATION_THREAD_PRIO, 0, K_NO_WAIT);
+        k_thread_name_set(&sd_fmt_desc, "sd_fmt");
+        return 0;
+    }
+    /* Already formatting; treat as success for idempotence */
+    return 0;
+#else
+    /* Host build path: perform synchronous format */
     return sd_format();
+#endif
 }
 
 static int h_list(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint32_t* rsp_len)

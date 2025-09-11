@@ -5,7 +5,7 @@
 #include "app/serial_async.h"
 #include "protocol/protocol.h"
 
-void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t* esf)
+void k_sys_fatal_error_handler(unsigned int reason, const struct arch_esf* esf)
 {
     ARG_UNUSED(esf);
     const char* base = "[fatal]";

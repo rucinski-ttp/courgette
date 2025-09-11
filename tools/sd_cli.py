@@ -32,9 +32,11 @@ def auto_port():
 
 def main():
     ap = argparse.ArgumentParser(description="Manual SD card operations over protocol")
-    ap.add_argument("cmd", choices=["status","format","list","read","write","rename","delete","mkdir","stat","checksum","logs"], help="command")
-    ap.add_argument("path", nargs="?", help="path")
-    ap.add_argument("arg", nargs="?", help="additional argument")
+    ap.add_argument("cmd", choices=[
+        "status","format","list","read","write","rename","delete","mkdir","stat","checksum","logs","upload"
+    ], help="command")
+    ap.add_argument("path", nargs="?", help="path (target on device)")
+    ap.add_argument("arg", nargs="?", help="additional argument or local source path for upload")
     ap.add_argument("--port", default=None)
     ap.add_argument("--baud", default=115200, type=int)
     args = ap.parse_args()
@@ -73,6 +75,33 @@ def main():
         data = args.arg.encode("utf-8")
         sd.write(args.path, 0, data)
         print("write: ok")
+    elif args.cmd == "upload":
+        # Upload a local file to the device path in chunks
+        if not args.arg or not args.path:
+            raise SystemExit("upload requires local-src and device-dst path: sd_cli.py upload <dst> <src>")
+        src = args.arg
+        dst = args.path
+        size = os.path.getsize(src)
+        print(f"upload: {src} -> {dst} ({size} bytes)")
+        # Ensure parent directory exists minimally
+        parent = os.path.dirname(dst) or "/"
+        if parent not in ("", "/"):
+            try:
+                sd.mkdir(parent)
+            except Exception:
+                pass
+        # Write in chunks to avoid giant frames
+        chunk = 64 * 1024
+        sent = 0
+        with open(src, "rb") as f:
+            while sent < size:
+                buf = f.read(chunk)
+                if not buf:
+                    break
+                sd.write(dst, sent, buf, timeout=max(5.0, len(buf)/4096.0 + 2.0))
+                sent += len(buf)
+                print(f"  {sent}/{size} ({int(sent*100/size)}%)")
+        print("upload: ok")
     elif args.cmd == "read":
         if not args.path: raise SystemExit("read requires path")
         off = 0; length = 256
