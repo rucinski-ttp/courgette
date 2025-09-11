@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR"
 
-BOARD="${BOARD:-stm32h747i_disco_m7}"
+BOARD="${BOARD:-stm32h747i_disco/stm32h747xx/m7}"
 BUILD_DIR="build/${BOARD}"
 APP_DIR="app"
 
@@ -39,6 +39,15 @@ west --version >/dev/null || {
 }
 
 mkdir -p "$BUILD_DIR"
-west build -p auto -b "$BOARD" -d "$BUILD_DIR" "$APP_DIR" -- -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${EXTRA_CMAKE_ARGS[@]:-}
+EXTRA_CMAKE_POST=()
+if [ -n "${SHIELD:-}" ]; then
+  echo "[build] Using shield: ${SHIELD}"
+  EXTRA_CMAKE_POST+=("-DSHIELD=${SHIELD}")
+  PRISTINE_MODE=always
+else
+  PRISTINE_MODE=auto
+fi
+
+west build -p "$PRISTINE_MODE" -b "$BOARD" -d "$BUILD_DIR" "$APP_DIR" -- -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${EXTRA_CMAKE_ARGS[@]:-} ${EXTRA_CMAKE_POST[@]:-}
 
 echo "[build] Build completed: ${BUILD_DIR}"

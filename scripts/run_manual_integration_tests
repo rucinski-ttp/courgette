@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+
+# Build and flash with display shield (default A09 NT35510)
+export SHIELD="${SHIELD:-st_b_lcd40_dsi1_mb1166_a09}"
+"$ROOT_DIR/scripts/build.sh"
+"$ROOT_DIR/scripts/flash.sh"
+
+python3 "$ROOT_DIR/tools/manual_display_check.py" "$@"

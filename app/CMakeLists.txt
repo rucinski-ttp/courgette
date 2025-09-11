@@ -50,8 +50,10 @@ app_strict_warnings(protocol)
 add_library(drivers STATIC
   src/drivers/heartbeat.c
   src/drivers/error_indicator.c
+  src/drivers/display.c
 )
 target_include_directories(drivers PUBLIC ${APP_INCLUDE_DIR})
+target_include_directories(drivers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../lib/display/include)
 target_link_libraries(drivers PRIVATE zephyr_interface)
 app_zephyr_warnings(drivers)
 
@@ -73,7 +75,10 @@ target_sources(app PRIVATE
   src/app/main.c
   src/app/app_runtime.c
   src/app/proto_task.c
+  src/app/doom_task.c
+  src/app/cmd_doom.c
   src/app/cmd_sd.c
+  src/app/cmd_display.c
   src/drivers/activity_led.c
   src/platform/sd_ops.c
 )

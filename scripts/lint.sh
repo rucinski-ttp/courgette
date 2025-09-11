@@ -16,7 +16,9 @@ if [ -z "${APP_FILES}${LIB_FILES}" ]; then
   exit 0
 fi
 
-ZE_DB="${ROOT_DIR}/build/stm32h747i_disco_m7/compile_commands.json"
+# Match build.sh default BOARD layout
+BOARD="${BOARD:-stm32h747i_disco/stm32h747xx/m7}"
+ZE_DB="${ROOT_DIR}/build/${BOARD}/compile_commands.json"
 UNIT_DB="${ROOT_DIR}/build-host/unit/compile_commands.json"
 
 if [ -n "$APP_FILES" ]; then

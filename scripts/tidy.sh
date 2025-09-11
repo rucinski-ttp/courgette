@@ -11,7 +11,8 @@ cd "$ROOT_DIR"
 DO_FORMAT=1
 DO_HOST=1
 DO_FW=0
-BOARD="${BOARD:-stm32h747i_disco_m7}"
+# Match build.sh default BOARD layout
+BOARD="${BOARD:-stm32h747i_disco/stm32h747xx/m7}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,13 +45,19 @@ if [[ $DO_HOST -eq 1 ]]; then
   fi
   echo "[tidy] Ensuring host unit build exists (for compile_commands.json)..."
   ./scripts/test_unit.sh >/dev/null
-  echo "[tidy] Running clang-tidy on host libraries (per compile DB)..."
-  if have run-clang-tidy; then
-    run-clang-tidy -quiet -p build-host/unit -header-filter='^(lib)/.*' || true
+  echo "[tidy] Running clang-tidy on host libraries (per compile DB, limited to lib/*)..."
+  # Limit to lib/* sources to avoid noise from tests and third-party code in the host build
+  if have jq; then
+    mapfile -t HOSTFILES < <(jq -r '.[] | select(.file|test("/(lib)/")) | .file' build-host/unit/compile_commands.json 2>/dev/null | sort -u)
   else
-    # Fallback: run on files present in DB
-    mapfile -t HOSTFILES < <(jq -r '.[].file' build-host/unit/compile_commands.json 2>/dev/null | sort -u || true)
-    if [[ ${#HOSTFILES[@]} -gt 0 ]]; then
+    mapfile -t HOSTFILES < <(grep -o '"file": ".*"' build-host/unit/compile_commands.json 2>/dev/null | sed -E 's/"file": "(.*)"/\1/' | grep -E '/lib/' | sort -u)
+  fi
+  if [[ ${#HOSTFILES[@]} -eq 0 ]]; then
+    echo "[tidy] No lib/* files found in host compile DB; skipping host tidy."
+  else
+    if have run-clang-tidy; then
+      run-clang-tidy -quiet -p build-host/unit -header-filter='^(lib)/.*' -- "${HOSTFILES[@]}" || true
+    else
       clang-tidy -p build-host/unit -quiet -header-filter='^(lib)/.*' "${HOSTFILES[@]}" || true
     fi
   fi
@@ -83,4 +90,3 @@ if [[ $DO_FW -eq 1 ]]; then
 fi
 
 echo "[tidy] Done."
-

@@ -3,6 +3,8 @@
 
 #include "app/activity_led.h"
 #include "app/app_runtime.h"
+#include "app/cmd_display.h"
+#include "app/cmd_doom.h"
 #include "app/cmd_sd.h"
 #include "app/error_indicator.h"
 #include "app/heartbeat.h"
@@ -50,6 +52,8 @@ void main(void)
     (void)cmd_reboot_init();
     (void)cmd_mem_init();
     (void)cmd_sd_init();
+    (void)cmd_display_init();
+    (void)cmd_doom_init();
 
     /* Start protocol processing after handlers are registered */
     proto_task_start();

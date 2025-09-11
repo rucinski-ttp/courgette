@@ -43,6 +43,20 @@ Command Semantics
 - SD.Status (0x0209): no request payload; response payload = <s32 rc> mount status (0 ok, negative errno otherwise).
 - SD.Fill (0x020C): request payload = path\0 <u32 size><u32 seed>; device creates/overwrites the file with a deterministic xorshift32 pattern (no serial bulk transfer). Response empty on success.
 
+- Display (0x0300+):
+  - Disp.Info (0x0300): no request payload; response payload = <u16 w><u16 h><u8 fmt><u8 can_read><u8 can_write><u16 stride_bytes?>.
+  - Disp.Fill (0x0301): request payload = <u8 r><u8 g><u8 b>; response empty on success.
+  - Disp.Read (0x0302): request payload = <u16 x><u16 y><u16 w><u16 h>; response payload = raw pixel data in native format.
+  - Disp.GetID (0x0303): no request payload; response payload = panel ID bytes (optional; may be empty).
+  - Disp.BlankOff (0x0304): unblank/backlight on; response empty.
+  - Disp.BlankOn (0x0305): blank/backlight off; response empty.
+  - Disp.Diag (0x0306): no request payload; response payload = UTF-8 text diagnostics (ltdc/dsi/panel status and mode).
+
+- Doom (0x0400+):
+  - Doom.Start (0x0400): start background task (scaffold); response empty.
+  - Doom.Status (0x0401): response payload = <u32 state><u32 ticks> where state: 0=stopped,1=starting,2=running.
+  - Doom.Stop (0x0402): stop task; response empty.
+
 Safety
 
 - MemRead allows flash and SRAM reads, limited to 256 bytes per request.

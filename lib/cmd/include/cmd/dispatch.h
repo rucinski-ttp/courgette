@@ -30,6 +30,20 @@ extern "C"
         CMD_ID_SD_PEEK = 0x020A,
         CMD_ID_SD_RAWREAD = 0x020B,
         CMD_ID_SD_FILL = 0x020C,
+
+        /* Display control */
+        CMD_ID_DISP_INFO = 0x0300,
+        CMD_ID_DISP_FILL = 0x0301,
+        CMD_ID_DISP_READ = 0x0302,
+        CMD_ID_DISP_GET_ID = 0x0303,
+        CMD_ID_DISP_BLANK_OFF = 0x0304,
+        CMD_ID_DISP_BLANK_ON = 0x0305,
+        CMD_ID_DISP_DIAG = 0x0306,
+
+        /* Doom task control */
+        CMD_ID_DOOM_START = 0x0400,
+        CMD_ID_DOOM_STATUS = 0x0401,
+        CMD_ID_DOOM_STOP = 0x0402,
     };
 
     typedef int (*cmd_handler_fn)(const uint8_t* req, uint32_t req_len, uint8_t* rsp,
