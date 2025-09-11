@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-extern "C" {
+extern "C"
+{
 #include "display/pixel.h"
 }
 
@@ -16,4 +17,3 @@ TEST(DisplayPixel, Rgb888ToRgb565)
     EXPECT_EQ(pixel_rgb888_to_rgb565(0x20, 0x20, 0x20), 0x2104);
     EXPECT_EQ(pixel_rgb888_to_rgb565(0x80, 0x80, 0x80), 0x8410);
 }
-

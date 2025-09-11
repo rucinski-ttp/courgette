@@ -86,8 +86,8 @@ int error_indicator_init(void)
     if (led_ready)
     {
         // NOLINTNEXTLINE(hicpp-signed-bitwise)
-        gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
-                                         (unsigned long)GPIO_OUTPUT_INIT_LOW);
+        gpio_flags_t fl =
+            (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW);
         (void)gpio_pin_configure_dt(&led0, fl);
     }
 #else

@@ -119,8 +119,9 @@ static int h_format(const uint8_t* req, uint32_t req_len, uint8_t* rsp, uint32_t
     if (atomic_compare_exchange_strong(&s_sd_fmt_busy, &expected, true))
     {
         /* Launch background format thread and return immediately */
-        k_thread_create(&sd_fmt_desc, sd_fmt_stack, K_THREAD_STACK_SIZEOF(sd_fmt_stack), sd_fmt_thread,
-                        NULL, NULL, NULL, K_LOWEST_APPLICATION_THREAD_PRIO, 0, K_NO_WAIT);
+        k_thread_create(&sd_fmt_desc, sd_fmt_stack, K_THREAD_STACK_SIZEOF(sd_fmt_stack),
+                        sd_fmt_thread, NULL, NULL, NULL, K_LOWEST_APPLICATION_THREAD_PRIO, 0,
+                        K_NO_WAIT);
         k_thread_name_set(&sd_fmt_desc, "sd_fmt");
         return 0;
     }

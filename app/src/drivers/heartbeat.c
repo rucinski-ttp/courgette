@@ -16,8 +16,7 @@ static K_THREAD_STACK_DEFINE(heartbeat_stack, 512);
 static struct k_thread heartbeat_thread;
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-static void heartbeat_entry(void* a, void* b,
-                            void* c)
+static void heartbeat_entry(void* a, void* b, void* c)
 {
     ARG_UNUSED(a);
     ARG_UNUSED(b);
@@ -47,8 +46,8 @@ int heartbeat_init(void)
     }
 
     // NOLINTNEXTLINE(hicpp-signed-bitwise)
-    gpio_flags_t fl = (gpio_flags_t)((unsigned long)GPIO_OUTPUT |
-                                     (unsigned long)GPIO_OUTPUT_INIT_LOW);
+    gpio_flags_t fl =
+        (gpio_flags_t)((unsigned long)GPIO_OUTPUT | (unsigned long)GPIO_OUTPUT_INIT_LOW);
     int ret = gpio_pin_configure_dt(&led, fl);
     if (ret)
     {
